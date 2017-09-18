@@ -1,0 +1,88 @@
+# Variables
+- name: "Set variables"
+  hosts: all
+  tasks:
+  - include_vars: variables.yml
+
+
+# Setup and configure ruby things for reddit app
+- name: "Reddit App: Configure app environment"
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+  - name: Install ruby and rubygems and required packages
+    apt: "name={{ item }} state=present"
+    with_items:
+      - ruby-full
+      - ruby-dev
+      - build-essential
+
+  - name: Install Ruby bundler
+    gem:
+      name: bundler
+      state: present
+      user_install: no
+
+# Setup and configure mongodb for reddit app
+- name: "Reddit App: Install mongodb"
+  hosts: all
+  gather_facts: no
+  become: true
+
+  tasks:
+  - name: Add apt-key for mongodb repo
+    apt_key:
+      keyserver: hkp://keyserver.ubuntu.com
+      id: EA312927
+      state: present
+  - name: Add mongodb repository
+    apt_repository:
+      repo: deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse
+  - name: Install mongodb package
+    apt:
+      name: mongodb-org
+      update_cache: yes
+  - name: Add mongodb to autostart
+    service: 
+      name: mongod 
+      state: started 
+      daemon-reload: true
+
+# Deploy reddit app
+- name: "Reddit App: Deploy application"
+  hosts: all
+  gather_facts: no
+  become: true
+  become_user: "{{ reddit_user }}"
+
+  tasks:
+  - name: Receive app code from github
+    git:
+      repo: https://github.com/Artemmkin/reddit.git
+      dest: "{{ reddit_dir }}"
+    register: git_status
+  - name: Install required gems
+    when: git_status.changed
+    bundler:
+      state: present
+      gemfile: "{{ reddit_dir }}/Gemfile"
+
+# Puma autostart
+- name: "Add service file for puma, add puma to autostart"
+  hosts: all
+  gather_facts: no
+  become: true
+
+  tasks:
+  - name: Copy puma.service file to instance
+    copy:
+      src: ../packer/files/puma.service
+      dest: /etc/systemd/system/puma.service
+  - name: Add puma to autostart and restart
+    when: git_status.changed
+    service:
+      name: puma
+      state: restarted
+      daemon-reload: true
