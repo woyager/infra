@@ -37,18 +37,42 @@
     apt:
       name: mongodb-org
       update_cache: yes
-  - name: Add mongodb to systemd
+  - name: Add mongodb to autostart
     service: 
-      name=mongod 
-      state=started 
-      daemon-reload=true
+      name: mongod 
+      state: started 
+      daemon-reload: true
 
 # Deploy reddit app
 - name: "Reddit App: Deploy application"
-  hosts: reddit_app
+  hosts: all
   gather_facts: no
+  become: true
+  become_user: appuser
 
   tasks:
-  - name: Remove me after adding real things
-    debug:
-      msg: "В этом сценарии нужно добавить модули для деплоя приложения, после можно удалить вызов модуля debug, который выводит это сообщение"
+  - name: Receive app code from github
+    git:
+      repo: https://github.com/Artemmkin/reddit.git
+      dest: /home/appuser/reddit
+  - name: Install required gems
+    bundler:
+      state: present
+      gemfile: /home/appuser/reddit/Gemfile
+
+# Puma autostart
+- name: "Add service file for puma, add it to autostart"
+  hosts: all
+  gather_facts: no
+  become: true
+
+  tasks:
+  - name: Copy puma.service file to instance
+    copy:
+      src: ../packer/files/puma.service
+      dest: /etc/systemd/system/puma.service
+  - name: Add puma to autostart
+    service:
+      name: puma
+      state: started
+      daemon-reload: true

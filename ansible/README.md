@@ -7,3 +7,15 @@ gcloud compute instances create --project=infra-179412 --boot-disk-size=10GB --i
 ```
 
 Не забыть создать firewall правило, убитое terraform-ом )
+
+Packer string
+
+```
+packer build -var 'proj_id=infra-179412' -var 'source_image=ubuntu-1604-xenial-v20170815a' ./ansible1.json
+```
+
+Basic instance
+
+```
+gcloud compute instances create --project=infra-179412 --boot-disk-size=10GB --image=reddit-base-1505735653 --machine-type=g1-small --restart-on-failure --zone=europe-west1-b --address 35.195.16.129 ansible-test
+```
