@@ -1,3 +1,10 @@
+# Variables
+- name: "Set variables"
+  hosts: all
+  tasks:
+  - include_vars: variables.yml
+
+
 # Setup and configure ruby things for reddit app
 - name: "Reddit App: Configure app environment"
   hosts: all
@@ -48,20 +55,22 @@
   hosts: all
   gather_facts: no
   become: true
-  become_user: appuser
+  become_user: "{{ reddit_user }}"
 
   tasks:
   - name: Receive app code from github
     git:
       repo: https://github.com/Artemmkin/reddit.git
-      dest: /home/appuser/reddit
+      dest: "{{ reddit_dir }}"
+    register: git_status
   - name: Install required gems
+    when: git_status.changed
     bundler:
       state: present
-      gemfile: /home/appuser/reddit/Gemfile
+      gemfile: "{{ reddit_dir }}/Gemfile"
 
 # Puma autostart
-- name: "Add service file for puma, add it to autostart"
+- name: "Add service file for puma, add puma to autostart"
   hosts: all
   gather_facts: no
   become: true
@@ -71,8 +80,9 @@
     copy:
       src: ../packer/files/puma.service
       dest: /etc/systemd/system/puma.service
-  - name: Add puma to autostart
+  - name: Add puma to autostart and restart
+    when: git_status.changed
     service:
       name: puma
-      state: started
+      state: restarted
       daemon-reload: true
