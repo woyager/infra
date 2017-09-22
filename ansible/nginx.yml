@@ -1,0 +1,13 @@
+- name: Configure nginx for reddit project
+  hosts: app
+  become: true
+
+  roles:
+    - role: jdauphant.nginx
+      nginx_sites:
+        default:
+          - listen 80
+          - server_name _
+          - location / {
+              proxy_pass http://127.0.0.1:9292;
+            }

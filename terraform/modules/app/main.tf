@@ -15,11 +15,23 @@ resource "google_compute_firewall" "firewall_puma" {
   target_tags   = ["reddit-app"]
 }
 
+resource "google_compute_firewall" "firewall_http" {
+  name    = "allow-http-default"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  target_tags = ["http-server"]
+}
+
 resource "google_compute_instance" "app" {
   name         = "reddit-app"
   machine_type = "${var.app_machine_type}"
   zone         = "${var.app_zone}"
-  tags         = ["reddit-app"]
+  tags         = ["reddit-app", "http-server"]
 
   boot_disk {
     initialize_params {
