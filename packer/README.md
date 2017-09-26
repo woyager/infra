@@ -1,4 +1,13 @@
-ДЗ по инфраструктуре
+# Создание образов в Google Cloud
 
-ubuntu16.json - create base image with services
-immutable.json - create baKe image with services and application
+## App образ
+
+```
+packer build -var 'proj_id=infra-179412' -var 'source_image=ubuntu-1604-xenial-v20170815a' packer/app.json
+```
+
+## DB образ
+
+```
+packer build -var 'proj_id=infra-179412' -var 'source_image=ubuntu-1604-xenial-v20170815a' packer/db.json
+```
