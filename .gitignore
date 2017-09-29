@@ -5,3 +5,11 @@
 .terraform/
 *.retry
 infra-a468d1fdb35c.json
+# Vagrant
+.vagrant/
+*.logs
+__pycache__
+.molecule
+*.log
+*.pyc
+.cache
