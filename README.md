@@ -30,3 +30,9 @@ terraform destroy
 ```
 ansible-playbook [hosts] [-i environment/inventory] playbook [--limit tag]
 ```
+
+### Import db роли
+
+```
+ansible-galaxy install -r galaxy-requirements.yml
+```
